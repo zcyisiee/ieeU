@@ -1,8 +1,8 @@
 {
-    "endpoint": "https://api.openai.com/v1",
-    "key": "your-api-key-here",
-    "modelName": "gpt-4-vision-preview",
-    "timeout": 60,
+    "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+    "key": "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",
+    "modelName": "google/gemini-3-flash-preview",
+    "timeout": 120,
     "retries": 3,
-    "maxConcurrency": 5
+    "maxConcurrency": 3
 }

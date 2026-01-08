@@ -56,7 +56,7 @@ class VLMClient:
         for attempt in range(self.config.retries):
             try:
                 response = requests.post(
-                    f"{self.config.endpoint}/chat/completions",
+                    str(self.config.endpoint),
                     headers=headers,
                     json=payload,
                     timeout=self.config.timeout

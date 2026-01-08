@@ -21,7 +21,7 @@ class ImageExtractor:
     def find_markdown_files(directory: str) -> List[str]:
         md_files = []
         for file in os.listdir(directory):
-            if file.endswith('.md'):
+            if file == 'full.md':
                 md_files.append(os.path.join(directory, file))
         return sorted(md_files)
     

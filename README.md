@@ -1,71 +1,71 @@
-# ieeU
+# ieeU - 图片描述替换工具
 
-ieeU is a command-line tool that replaces image links in Markdown files with VLM-generated descriptive text.
+将MinerU转换后的Markdown文件中的图片链接替换为VLM生成的描述性文本。
 
-## Installation
+## 安装
 
 ```bash
 pip install -e .
 ```
 
-## Configuration
+## 配置
 
-Create a configuration file at `~/.ieeU/settings.json`:
+在 `~/.ieeU/settings.json` 中配置API：
 
 ```json
 {
-    "endpoint": "https://api.openai.com/v1",
+    "endpoint": "https://openrouter.ai/api/v1/chat/completions",
     "key": "your-api-key",
-    "modelName": "gpt-4-vision-preview",
-    "timeout": 60,
+    "modelName": "google/gemini-3-flash-preview",
+    "timeout": 120,
     "retries": 3,
-    "maxConcurrency": 5
+    "maxConcurrency": 3
 }
 ```
 
-### Required fields:
-- `endpoint`: API endpoint URL
-- `key`: API key
-- `modelName`: Model name (e.g., `gpt-4-vision-preview`)
+### 必填项
+- `endpoint`: API端点URL
+- `key`: API密钥
+- `modelName`: 模型名称
 
-### Optional fields:
-- `timeout`: Request timeout in seconds (default: 60)
-- `retries`: Number of retry attempts (default: 3)
-- `maxConcurrency`: Maximum concurrent API calls (default: 5)
+### 可选项
+- `timeout`: 请求超时（秒）
+- `retries`: 重试次数
+- `maxConcurrency`: 最大并发数
 
-## Usage
+## 使用
 
-Navigate to a directory containing MinerU-processed Markdown files and run:
+在包含 `full.md` 的目录中运行：
 
 ```bash
 ieeU run
 ```
 
-The tool will:
-1. Find all Markdown files in the current directory
-2. Extract image references from each file
-3. Generate descriptions for each image using VLM
-4. Create new files with `.iee.md` suffix
+工具将：
+1. 读取 `full.md` 文件
+2. 提取所有图片引用
+3. 调用VLM生成描述
+4. 输出 `full.iee.md` 文件
 
-## Example
+### 示例
 
-Before:
+处理前：
 ```markdown
-![](/path/to/image.jpg)
+![](images/figure1.jpg)
 Figure 1 shows the architecture.
 ```
 
-After:
-```markdown
+处理后：
+````markdown
 ```figure 1
 This figure illustrates the overall architecture of the system...
 ```
 Figure 1 shows the architecture.
-```
+````
 
-## Environment Variables
+## 环境变量
 
-Override configuration using environment variables:
+可覆盖配置：
 - `IEEU_ENDPOINT`
 - `IEEU_KEY`
 - `IEEU_MODEL`
