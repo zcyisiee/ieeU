@@ -1,26 +1,47 @@
 [build-system]
-requires = ["setuptools>=45", "wheel"]
+requires = ["setuptools>=61.0", "wheel", "build"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "ieeU"
-version = "0.1.0"
-description = "Tool to replace image links with VLM-generated descriptions in MinerU output"
+version = "1.0.0"
+description = "将Markdown中的图片链接替换为VLM生成的描述性文本"
 readme = "README.md"
+license = {text = "MIT"}
 requires-python = ">=3.8"
+authors = [
+    {name = "Caiyi Zheng", email = "xiaoxiaodeyehenkeai11@gmail.com"}
+]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
+keywords = ["vlm", "markdown", "image", "description", "mineru", "ai"]
 dependencies = [
     "requests>=2.25.0",
     "python-dateutil>=2.8.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/zcyisiee/ieeU"
+Repository = "https://github.com/zcyisiee/ieeU"
+Issues = "https://github.com/zcyisiee/ieeU/issues"
 
 [project.scripts]
 ieeU = "ieeU.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["ieeU*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.8"

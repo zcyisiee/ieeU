@@ -1,38 +1,87 @@
+import argparse
 import os
 import sys
+
 from .config import Config
 from .processor import Processor
 
 
 def main():
-    if len(sys.argv) < 2 or sys.argv[1] != 'run':
-        print("Usage: ieeU run")
-        sys.exit(1)
+    """Main entry point for ieeU CLI."""
     
-    verbose = "--verbose" in sys.argv or "-v" in sys.argv
+    parser = argparse.ArgumentParser(
+        prog="ieeU",
+        description="将Markdown中的图片链接替换为VLM生成的描述性文本",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例:
+  ieeU run                  # 执行图片描述转换
+  ieeU run --verbose        # 详细输出模式
+  ieeU --version            # 显示版本号
+  
+配置文件:
+  ~/.ieeU/settings.json
+        """
+    )
     
-    directory = sys.argv[2] if len(sys.argv) > 2 else "."
+    parser.add_argument(
+        "--version", "-V",
+        action="version",
+        version="1.0.0"
+    )
     
-    directory = os.path.abspath(directory)
+    subparsers = parser.add_subparsers(
+        dest="command",
+        metavar="<命令>",
+        description="可用的命令"
+    )
     
-    if not os.path.isdir(directory):
-        print(f"Error: Directory not found: {directory}")
-        sys.exit(1)
+    # run command
+    run_parser = subparsers.add_parser(
+        "run",
+        help="执行图片描述转换",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例:
+  ieeU run
+  ieeU run --verbose
+        """
+    )
+    run_parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="详细输出模式"
+    )
     
-    config = Config.load()
+    args = parser.parse_args()
     
-    try:
-        config.validate()
-    except ValueError as e:
-        print(f"Configuration error: {e}")
-        print(
-            f"Please create ~/.ieeU/settings.json with "
-            f"endpoint, key, and modelName."
-        )
-        sys.exit(1)
+    if args.command is None:
+        parser.print_help()
+        sys.exit(0)
     
-    processor = Processor(config, verbose)
-    processor.process_directory(directory)
+    if args.command == "run":
+        verbose = getattr(args, "verbose", False)
+        
+        directory = os.path.abspath(".")
+        
+        if not os.path.isdir(directory):
+            print(f"错误: 目录不存在: {directory}")
+            sys.exit(1)
+        
+        config = Config.load()
+        
+        try:
+            config.validate()
+        except ValueError as e:
+            print(f"配置错误: {e}")
+            print(f"请创建 ~/.ieeU/settings.json，包含 endpoint、key 和 modelName")
+            sys.exit(1)
+        
+        processor = Processor(config, verbose)
+        processor.process_directory(directory)
+    
+    else:
+        parser.print_help()
 
 
 if __name__ == "__main__":
