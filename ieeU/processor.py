@@ -62,11 +62,8 @@ class Processor:
                 replacements
             )
             
-            output_filename = (
-                os.path.splitext(filename)[0] + 
-                OUTPUT_SUFFIX + 
-                os.path.splitext(filename)[1]
-            )
+            base_name = os.path.splitext(filename)[0]
+            output_filename = f"{base_name}{OUTPUT_SUFFIX}"
             output_path = os.path.join(
                 os.path.dirname(file_path), 
                 output_filename
