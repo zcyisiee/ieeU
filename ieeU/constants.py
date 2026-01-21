@@ -5,6 +5,7 @@ DEFAULT_CONFIG_FILE = "settings.json"
 DEFAULT_TIMEOUT = 60
 DEFAULT_RETRIES = 3
 DEFAULT_MAX_CONCURRENCY = 5
+DEFAULT_BATCH_SIZE = 10
 OUTPUT_SUFFIX = "_ie.md"
 
 PROMPT_TEMPLATE = """You are an expert at describing academic figures. Convert images into concise, structured textual descriptions.
