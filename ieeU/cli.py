@@ -28,7 +28,7 @@ def main():
     parser.add_argument(
         "--version", "-V",
         action="version",
-        version="2.0.1"
+        version="2.0.2"
     )
     
     subparsers = parser.add_subparsers(
@@ -63,6 +63,11 @@ def main():
         action="store_true",
         help="详细输出模式"
     )
+    process_parser.add_argument(
+        "--batch-size", "-b",
+        default="10",
+        help="并发批次大小，数字或'full'表示一次发送全部（默认: 10）"
+    )
     
     # run command (backward compatibility)
     run_parser = subparsers.add_parser(
@@ -79,6 +84,11 @@ def main():
         "--verbose", "-v",
         action="store_true",
         help="详细输出模式"
+    )
+    run_parser.add_argument(
+        "--batch-size", "-b",
+        default="10",
+        help="并发批次大小，数字或'full'表示一次发送全部（默认: 10）"
     )
     
     args = parser.parse_args()
@@ -120,11 +130,13 @@ def main():
             output_dir = os.path.dirname(pdf_path)
         
         verbose = getattr(args, "verbose", False)
-        processor = Processor(config, verbose)
+        batch_size = args.batch_size if args.batch_size == "full" else int(args.batch_size)
+        processor = Processor(config, verbose, batch_size)
         processor.process_pdf(pdf_path, output_dir)
     
     elif args.command == "run":
         verbose = getattr(args, "verbose", False)
+        batch_size = args.batch_size if args.batch_size == "full" else int(args.batch_size)
         
         directory = os.path.abspath(".")
         
@@ -139,7 +151,7 @@ def main():
             print(f"请创建 ~/.ieeU/settings.json，包含 endpoint、key 和 modelName")
             sys.exit(1)
         
-        processor = Processor(config, verbose)
+        processor = Processor(config, verbose, batch_size)
         processor.process_directory(directory)
     
     else:

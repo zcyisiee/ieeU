@@ -3,11 +3,11 @@ import shutil
 import tempfile
 from typing import Dict, List, Optional, Tuple
 from .config import Config
-from .constants import OUTPUT_SUFFIX
+from .constants import OUTPUT_SUFFIX, DEFAULT_BATCH_SIZE
 from .extractor import ImageExtractor, ImageReference
 from .logger import Logger
 from .mineru import MinerUClient
-from .vlm import VLMClient, BatchResult
+from .vlm import VLMClient, BatchResult, BatchSizeType
 
 
 class ProcessResult:
@@ -21,10 +21,11 @@ class ProcessResult:
 
 
 class Processor:
-    def __init__(self, config: Config, verbose: bool = False):
+    def __init__(self, config: Config, verbose: bool = False, batch_size: BatchSizeType = DEFAULT_BATCH_SIZE):
         self.config = config
         self.logger = Logger(verbose)
         self.vlm_client = VLMClient(config, self.logger)
+        self.batch_size = batch_size
     
     def _build_replacement(
         self, 
@@ -74,7 +75,7 @@ class Processor:
             print(f"No valid image paths found")
             return content, BatchResult()
         
-        batch_result = self.vlm_client.describe_images_batch(image_paths)
+        batch_result = self.vlm_client.describe_images_batch(image_paths, self.batch_size)
         
         replacements = {}
         for ref in references:
@@ -176,7 +177,7 @@ class Processor:
             os.path.dirname(file_path)
         )
         
-        batch_result = self.vlm_client.describe_images_batch(image_paths)
+        batch_result = self.vlm_client.describe_images_batch(image_paths, self.batch_size)
         
         if batch_result.api_completely_failed:
             print(f"\n⚠️ VLM API无法使用，跳过文件 {filename}")

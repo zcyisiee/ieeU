@@ -11,6 +11,9 @@ from .config import Config
 from .constants import PROMPT_TEMPLATE, DEFAULT_BATCH_SIZE
 from .logger import Logger
 
+# Type alias for batch_size parameter
+BatchSizeType = int | str  # int or "full"
+
 
 class APIErrorType(Enum):
     """API错误类型枚举"""
@@ -196,13 +199,14 @@ class VLMClient:
     
     def _process_batch_concurrent(
         self, 
-        batch_items: List[Tuple[str, str]]
+        batch_items: List[Tuple[str, str]],
+        concurrency: int
     ) -> Tuple[Dict[str, str], List[Tuple[str, str, APIErrorType]]]:
         """并发处理一批图片"""
         results = {}
         failures = []
         
-        with ThreadPoolExecutor(max_workers=min(len(batch_items), self.config.max_concurrency)) as executor:
+        with ThreadPoolExecutor(max_workers=concurrency) as executor:
             futures = {
                 executor.submit(self.describe_image, full_path): (rel_path, full_path)
                 for rel_path, full_path in batch_items
@@ -282,10 +286,15 @@ class VLMClient:
     
     def describe_images_batch(
         self, 
-        image_paths: Dict[str, str]
+        image_paths: Dict[str, str],
+        batch_size: BatchSizeType = DEFAULT_BATCH_SIZE
     ) -> BatchResult:
         """
-        批量处理图片，每批10张
+        批量处理图片
+        
+        Args:
+            image_paths: {相对路径: 绝对路径} 的字典
+            batch_size: 每批处理数量，int 或 "full" 表示一次发送全部
         
         返回BatchResult包含:
         - results: 成功处理的描述
@@ -300,14 +309,16 @@ class VLMClient:
             return batch_result
         
         items = list(image_paths.items())
-        batch_size = DEFAULT_BATCH_SIZE
+        
+        effective_batch_size = total if batch_size == "full" else int(batch_size)
+        concurrency = effective_batch_size
+        
         processed = 0
         
-        # 第一批尝试并发
-        first_batch = items[:min(batch_size, len(items))]
-        print(f"\n🚀 尝试并发处理 (批次大小: {len(first_batch)})")
+        first_batch = items[:min(effective_batch_size, len(items))]
+        print(f"\n🚀 尝试并发处理 (批次大小: {len(first_batch)}, 并发数: {concurrency})")
         
-        results, failures = self._process_batch_concurrent(first_batch)
+        results, failures = self._process_batch_concurrent(first_batch, concurrency)
         batch_result.results.update(results)
         processed += len(first_batch)
         
@@ -370,12 +381,12 @@ class VLMClient:
         # 继续并发处理剩余批次
         while processed < len(items):
             batch_start = processed
-            batch_end = min(processed + batch_size, len(items))
+            batch_end = min(processed + effective_batch_size, len(items))
             batch_items = items[batch_start:batch_end]
             
-            print(f"\n🚀 处理批次 {batch_start // batch_size + 2} ({len(batch_items)} 张)")
+            print(f"\n🚀 处理批次 {batch_start // effective_batch_size + 2} ({len(batch_items)} 张)")
             
-            results, failures = self._process_batch_concurrent(batch_items)
+            results, failures = self._process_batch_concurrent(batch_items, concurrency)
             batch_result.results.update(results)
             processed = batch_end
             
