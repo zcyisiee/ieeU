@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ieeU"
-version = "1.1.0"
+version = "1.2.1"
 description = "将Markdown中的图片链接替换为VLM生成的描述性文本"
 readme = "README.md"
 license = {text = "MIT"}

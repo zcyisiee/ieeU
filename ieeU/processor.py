@@ -1,9 +1,12 @@
 import os
+import shutil
+import tempfile
 from typing import Dict, List
 from .config import Config
 from .constants import OUTPUT_SUFFIX
 from .extractor import ImageExtractor, ImageReference
 from .logger import Logger
+from .mineru import MinerUClient
 from .vlm import VLMClient
 
 
@@ -18,7 +21,85 @@ class Processor:
         ref: ImageReference, 
         description: str
     ) -> str:
-        return f"```figure {ref.figure_num}\n{description}\n```"
+        return f"```figure {ref.figure_num}\n{description}\n```\n"
+    
+    def _process_markdown_content(
+        self,
+        content: str,
+        base_dir: str,
+        filename: str
+    ) -> str:
+        references = ImageExtractor.extract_image_references(content)
+        
+        if not references:
+            print(f"No images found in {filename}")
+            return content
+        
+        self.logger.log_file_info(filename, len(references))
+        
+        image_paths = ImageExtractor.get_image_paths_from_references(
+            references, 
+            base_dir
+        )
+        
+        if not image_paths:
+            print(f"No valid image paths found")
+            return content
+        
+        descriptions = self.vlm_client.describe_images_batch(image_paths)
+        
+        replacements = {}
+        for ref in references:
+            if ref.path in descriptions:
+                new_text = self._build_replacement(ref, descriptions[ref.path])
+                old_text = f"![]({ref.path})"
+                replacements[old_text] = new_text
+            else:
+                self.logger.log_error(
+                    ref.path, 
+                    "No description generated"
+                )
+        
+        if replacements:
+            return ImageExtractor.replace_images(content, replacements)
+        
+        return content
+    
+    def process_pdf(self, pdf_path: str, output_dir: str):
+        self.logger.log_start()
+        
+        pdf_name = os.path.splitext(os.path.basename(pdf_path))[0]
+        
+        mineru_client = MinerUClient(self.config.mineru_token or "", self.logger)
+        
+        temp_dir = tempfile.mkdtemp(prefix="ieeu_")
+        
+        try:
+            md_path, images_dir = mineru_client.parse_pdf(pdf_path, temp_dir)
+            
+            if not md_path:
+                print("MinerU 解析失败")
+                return
+            
+            with open(md_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            md_dir = os.path.dirname(md_path)
+            processed_content = self._process_markdown_content(
+                content,
+                md_dir,
+                os.path.basename(md_path)
+            )
+            
+            output_path = os.path.join(output_dir, f"{pdf_name}.md")
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(processed_content)
+            
+            print(f"\n输出文件: {output_path}")
+            self.logger.log_summary()
+            
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
     
     def _process_single_file(
         self, 

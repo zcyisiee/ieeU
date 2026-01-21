@@ -1,3 +1,4 @@
+import os
 import re
 from typing import Dict, List, Tuple
 
@@ -66,11 +67,13 @@ class ImageExtractor:
         base_dir: str
     ) -> Dict[str, str]:
         paths = {}
+        image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'}
+        
         for ref in references:
-            if ref.path.startswith('images/'):
+            ext = os.path.splitext(ref.path.lower())[1]
+            if ext in image_extensions:
                 full_path = os.path.join(base_dir, ref.path)
-                paths[ref.path] = full_path
+                if os.path.isfile(full_path):
+                    paths[ref.path] = full_path
+        
         return paths
-
-
-import os

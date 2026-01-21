@@ -15,6 +15,7 @@ class Config:
         self.endpoint: Optional[str] = None
         self.key: Optional[str] = None
         self.model_name: Optional[str] = None
+        self.mineru_token: Optional[str] = None
         self.timeout: int = DEFAULT_TIMEOUT
         self.retries: int = DEFAULT_RETRIES
         self.max_concurrency: int = DEFAULT_MAX_CONCURRENCY
@@ -40,6 +41,7 @@ class Config:
                     'maxConcurrency', 
                     DEFAULT_MAX_CONCURRENCY
                 )
+                config.mineru_token = data.get('mineruToken')
         
         config._apply_env_overrides()
         
@@ -52,6 +54,8 @@ class Config:
             self.key = os.environ['IEEU_KEY']
         if 'IEEU_MODEL' in os.environ:
             self.model_name = os.environ['IEEU_MODEL']
+        if 'IEEU_MINERU_TOKEN' in os.environ:
+            self.mineru_token = os.environ['IEEU_MINERU_TOKEN']
     
     def validate(self) -> bool:
         if not self.endpoint:
