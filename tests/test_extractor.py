@@ -99,28 +99,37 @@ Desc2
 """.strip()
         assert result == expected
     
-    def test_get_image_paths_from_references(self):
+    def test_get_image_paths_from_references(self, tmp_path):
+        img_dir = tmp_path / "images"
+        img_dir.mkdir()
+        (img_dir / "fig1.jpg").touch()
+        (img_dir / "fig2.jpg").touch()
+        
         references = [
             ImageReference("images/fig1.jpg", 1, 1),
             ImageReference("images/fig2.jpg", 5, 2),
         ]
         
-        base_dir = "/test/dir"
+        base_dir = str(tmp_path)
         paths = ImageExtractor.get_image_paths_from_references(
             references, 
             base_dir
         )
         
-        assert paths["images/fig1.jpg"] == "/test/dir/images/fig1.jpg"
-        assert paths["images/fig2.jpg"] == "/test/dir/images/fig2.jpg"
+        assert paths["images/fig1.jpg"] == str(tmp_path / "images/fig1.jpg")
+        assert paths["images/fig2.jpg"] == str(tmp_path / "images/fig2.jpg")
     
-    def test_get_image_paths_filters_non_images_folder(self):
+    def test_get_image_paths_filters_non_images_folder(self, tmp_path):
+        img_dir = tmp_path / "images"
+        img_dir.mkdir()
+        (img_dir / "fig1.jpg").touch()
+        
         references = [
             ImageReference("../other/path.jpg", 1, 1),
             ImageReference("images/fig1.jpg", 2, 2),
         ]
         
-        base_dir = "/test/dir"
+        base_dir = str(tmp_path)
         paths = ImageExtractor.get_image_paths_from_references(
             references, 
             base_dir
